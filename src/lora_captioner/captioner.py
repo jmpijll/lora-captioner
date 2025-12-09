@@ -79,12 +79,20 @@ def caption_image(
     # Get instruction for this LoRA type
     instruction = get_instruction(lora_type)
     
+    # Get model dtype
+    model_dtype = next(model.parameters()).dtype
+    
     # Process inputs
     inputs = processor(
         text=instruction,
         images=image,
         return_tensors="pt"
-    ).to(device)
+    )
+    
+    # Move to device with correct dtype
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+    if "pixel_values" in inputs:
+        inputs["pixel_values"] = inputs["pixel_values"].to(model_dtype)
     
     # Generate caption
     with torch.no_grad():
@@ -99,17 +107,20 @@ def caption_image(
     # Decode output
     generated_text = processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
     
-    # Post-process
+    # Post-process using Florence-2's built-in parser
     caption = processor.post_process_generation(
         generated_text,
         task=instruction,
         image_size=(image.width, image.height)
     )
     
-    # Handle different output formats
+    # Handle different output formats from Florence-2
     if isinstance(caption, dict):
-        # Some instructions return dicts, extract the text
-        caption = caption.get(instruction, str(caption))
+        # Florence-2 returns {task: result} format
+        caption = caption.get(instruction, "")
+        # If still a dict or list, convert to string
+        if isinstance(caption, (dict, list)):
+            caption = str(caption)
     
     caption = str(caption).strip()
     

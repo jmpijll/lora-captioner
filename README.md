@@ -4,7 +4,7 @@ A command-line tool to automatically caption images for LoRA training datasets u
 
 ## Features
 
-- **Automatic Image Captioning**: Uses Florence-2-PromptGen, a lightweight model specifically tuned for generating training-ready captions
+- **Automatic Image Captioning**: Uses BLIP (Salesforce/blip-image-captioning-large), a robust model for generating descriptive captions
 - **Multiple LoRA Types**: Optimized captioning strategies for Character, Style, and Concept LoRAs
 - **Low Resource Usage**: Runs on as little as 2GB VRAM (GPU) or 4GB RAM (CPU)
 - **Automatic Model Download**: Downloads the VLLM model on first run
@@ -107,7 +107,7 @@ Options:
 
 ## Model Information
 
-This tool uses [MiaoshouAI/Florence-2-large-PromptGen-v1.5](https://huggingface.co/MiaoshouAI/Florence-2-large-PromptGen-v1.5), a model specifically fine-tuned for generating prompts and captions suitable for diffusion model training.
+This tool uses [Salesforce/blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large), a robust vision-language model for generating descriptive image captions. BLIP was chosen for its stability and broad compatibility.
 
 ## Documentation
 

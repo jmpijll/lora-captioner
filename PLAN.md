@@ -79,7 +79,7 @@ A command-line tool to caption images for LoRA training datasets using a lightwe
   - Concept: `<DETAILED_CAPTION>`
 - [x] Process images in batches (configurable batch size)
 - [x] Add trigger word prefix if specified
-- [ ] Display progress bar
+- [x] Display progress bar (tqdm)
 
 ### Step 3.4: Caption File Writing
 - [x] Write .txt file with same base name as image

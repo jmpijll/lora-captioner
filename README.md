@@ -13,16 +13,41 @@ A command-line tool to automatically caption images for LoRA training datasets u
 
 ## Installation
 
+### Prerequisites
+
+1. **Python 3.10 or higher** - [Download from python.org](https://www.python.org/downloads/)
+   - During installation, check "Add Python to PATH"
+
+2. **PyTorch** (recommended for GPU acceleration):
+   ```bash
+   # For CUDA 11.8
+   pip install torch --index-url https://download.pytorch.org/whl/cu118
+   
+   # For CUDA 12.1
+   pip install torch --index-url https://download.pytorch.org/whl/cu121
+   
+   # For CPU only
+   pip install torch
+   ```
+
+### Install from PyPI (coming soon)
+
 ```bash
 pip install lora-captioner
 ```
 
-Or install from source:
+### Install from Source
 
 ```bash
 git clone https://github.com/jmpijll/lora-captioner.git
 cd lora-captioner
 pip install -e .
+```
+
+### Verify Installation
+
+```bash
+lora-captioner --help
 ```
 
 ## Quick Start
@@ -51,7 +76,9 @@ Options:
   -o, --output PATH         Output folder (default: same as input)
   --device TEXT             Device to use: auto, cuda, or cpu (default: auto)
   --no-rename               Skip renaming images
+  --recursive               Search for images in subdirectories
   --dry-run                 Preview actions without making changes
+  --version                 Show version and exit
   --help                    Show this message and exit
 ```
 

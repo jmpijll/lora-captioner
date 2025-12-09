@@ -1,0 +1,11 @@
+# Core dependencies
+transformers>=4.36.0
+torch>=2.0.0
+Pillow>=10.0.0
+click>=8.0.0
+tqdm>=4.65.0
+huggingface-hub>=0.20.0
+
+# Optional: For GPU acceleration (uncomment appropriate line)
+# torch>=2.0.0+cu118  # CUDA 11.8
+# torch>=2.0.0+cu121  # CUDA 12.1

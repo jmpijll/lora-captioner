@@ -104,7 +104,7 @@ def main(
     click.echo(f"Rename files:  {'No' if no_rename else 'Yes'}")
     
     if dry_run:
-        click.echo("\n⚠️  DRY RUN MODE - No changes will be made\n")
+        click.echo("\n[!] DRY RUN MODE - No changes will be made\n")
     
     # Set output directory
     if output_path is None:
@@ -115,11 +115,11 @@ def main(
             output_path.mkdir(parents=True, exist_ok=True)
     
     # Step 1: Discover images
-    click.echo("\n📁 Discovering images...")
+    click.echo("\n[1/4] Discovering images...")
     images = discover_images(input_path, recursive=recursive)
     
     if not images:
-        click.echo("❌ No supported images found in the input folder.")
+        click.echo("ERROR: No supported images found in the input folder.")
         click.echo("   Supported formats: jpg, jpeg, png, webp, bmp, gif, tiff")
         sys.exit(1)
     
@@ -127,12 +127,12 @@ def main(
     
     # Step 2: Rename images (if enabled)
     if not no_rename:
-        click.echo("\n📝 Renaming images...")
+        click.echo("\n[2/4] Renaming images...")
         mappings = generate_new_names(images, dataset_name, output_path)
         
         if dry_run:
             for original, new in mappings[:5]:  # Show first 5
-                click.echo(f"   {original.name} → {new.name}")
+                click.echo(f"   {original.name} -> {new.name}")
             if len(mappings) > 5:
                 click.echo(f"   ... and {len(mappings) - 5} more")
         else:
@@ -141,31 +141,31 @@ def main(
                 create_rename_log(mappings, output_path, dry_run=False)
                 click.echo(f"   Renamed {len(images)} images")
             except FileExistsError as e:
-                click.echo(f"❌ Error: {e}")
+                click.echo(f"ERROR: {e}")
                 sys.exit(1)
     else:
-        click.echo("\n📝 Skipping rename (--no-rename)")
+        click.echo("\n[2/4] Skipping rename (--no-rename)")
         # If output differs from input, we'd need to copy files
         # For now, just work with original paths
     
     # Step 3: Load model
     if not dry_run:
-        click.echo("\n🤖 Loading captioning model...")
-        click.echo("   Model: MiaoshouAI/Florence-2-large-PromptGen-v1.5")
+        click.echo("\n[3/4] Loading captioning model...")
+        click.echo("   Model: Salesforce/blip-image-captioning-large")
         click.echo("   (This may take a moment on first run as the model downloads)")
         
         try:
             model, processor, device_str = load_model(device=device)
             click.echo(f"   Model loaded on {device_str}")
         except Exception as e:
-            click.echo(f"❌ Failed to load model: {e}")
+            click.echo(f"ERROR: Failed to load model: {e}")
             sys.exit(1)
     else:
-        click.echo("\n🤖 Would load captioning model (dry run)")
+        click.echo("\n[3/4] Would load captioning model (dry run)")
         model, processor, device_str = None, None, "cpu"
     
     # Step 4: Generate captions
-    click.echo("\n✍️  Generating captions...")
+    click.echo("\n[4/4] Generating captions...")
     lora_type_enum = LoRAType(lora_type.lower())
     
     captions_generated = 0
@@ -204,22 +204,22 @@ def main(
     
     # Step 5: Summary
     click.echo(f"\n{'='*50}")
-    click.echo("📊 Summary")
+    click.echo("SUMMARY")
     click.echo(f"{'='*50}")
     click.echo(f"   Images processed: {len(images)}")
     click.echo(f"   Captions created: {captions_generated if not dry_run else '(dry run)'}")
     
     if errors:
-        click.echo(f"\n⚠️  Errors ({len(errors)}):")
+        click.echo(f"\nWARNING: Errors ({len(errors)}):")
         for path, error in errors[:5]:
             click.echo(f"   - {path.name}: {error}")
         if len(errors) > 5:
             click.echo(f"   ... and {len(errors) - 5} more errors")
     
     if not dry_run and captions_generated > 0:
-        click.echo(f"\n✅ Done! Captions saved to: {output_path}")
+        click.echo(f"\nDONE! Captions saved to: {output_path}")
     elif dry_run:
-        click.echo("\n✅ Dry run complete. No files were modified.")
+        click.echo("\nDry run complete. No files were modified.")
 
 
 if __name__ == "__main__":

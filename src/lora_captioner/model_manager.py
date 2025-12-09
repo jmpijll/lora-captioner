@@ -9,10 +9,11 @@ from pathlib import Path
 from typing import Literal
 
 import torch
-from transformers import AutoModelForCausalLM, AutoProcessor
+from transformers import BlipProcessor, BlipForConditionalGeneration
 
 # Default model for captioning
-DEFAULT_MODEL_ID = "MiaoshouAI/Florence-2-large-PromptGen-v1.5"
+# Using BLIP for best compatibility and stability
+DEFAULT_MODEL_ID = "Salesforce/blip-image-captioning-large"
 
 # Cache directory for models
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "lora-captioner" / "models"
@@ -107,18 +108,15 @@ def load_model(
     print(f"Loading model: {model_id}")
     print(f"Device: {device_str}, dtype: {dtype}")
     
-    # Load processor
-    processor = AutoProcessor.from_pretrained(
+    # Load BLIP processor and model
+    processor = BlipProcessor.from_pretrained(
         model_id,
-        trust_remote_code=True,
         cache_dir=cache_dir,
     )
     
-    # Load model
-    model = AutoModelForCausalLM.from_pretrained(
+    model = BlipForConditionalGeneration.from_pretrained(
         model_id,
         torch_dtype=dtype,
-        trust_remote_code=True,
         cache_dir=cache_dir,
     ).to(device_str)
     

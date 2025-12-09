@@ -1,13 +1,12 @@
 """
 Image captioning logic for LoRA Captioner.
 
-Handles generating captions using Florence-2-PromptGen with
+Handles generating captions using BLIP with
 different strategies for Character, Style, and Concept LoRAs.
 """
 
 from enum import Enum
 from pathlib import Path
-from typing import Literal
 
 import torch
 from PIL import Image
@@ -20,35 +19,26 @@ class LoRAType(str, Enum):
     CONCEPT = "concept"
 
 
-# Instruction prompts for each LoRA type
-LORA_TYPE_INSTRUCTIONS = {
-    LoRAType.CHARACTER: "<MORE_DETAILED_CAPTION>",
-    LoRAType.STYLE: "<GENERATE_TAGS>",
-    LoRAType.CONCEPT: "<DETAILED_CAPTION>",
-}
-
-# Alternative instructions for style LoRAs
-STYLE_INSTRUCTIONS = {
-    "tags": "<GENERATE_TAGS>",
-    "natural": "<DETAILED_CAPTION>",
-    "mixed": "<MIXED_CAPTION>",
+# Text prompts for conditional captioning by LoRA type
+# BLIP supports conditional captioning with text prompts
+LORA_TYPE_PROMPTS = {
+    LoRAType.CHARACTER: "a photo of",  # Generic prompt, BLIP will describe what it sees
+    LoRAType.STYLE: "an image of",
+    LoRAType.CONCEPT: "a picture showing",
 }
 
 
-def get_instruction(lora_type: LoRAType, style_mode: str = "tags") -> str:
+def get_prompt(lora_type: LoRAType) -> str:
     """
-    Get the appropriate instruction prompt for a LoRA type.
+    Get the appropriate prompt for a LoRA type.
     
     Args:
         lora_type: Type of LoRA being trained
-        style_mode: For style LoRAs, which caption format to use
         
     Returns:
-        Instruction prompt string
+        Prompt string for the model
     """
-    if lora_type == LoRAType.STYLE:
-        return STYLE_INSTRUCTIONS.get(style_mode, STYLE_INSTRUCTIONS["tags"])
-    return LORA_TYPE_INSTRUCTIONS[lora_type]
+    return LORA_TYPE_PROMPTS.get(lora_type, LORA_TYPE_PROMPTS[LoRAType.STYLE])
 
 
 def caption_image(
@@ -60,12 +50,12 @@ def caption_image(
     trigger_word: str | None = None,
 ) -> str:
     """
-    Generate a caption for a single image.
+    Generate a caption for a single image using BLIP.
     
     Args:
         image_path: Path to the image file
-        model: Loaded Florence-2 model
-        processor: Loaded Florence-2 processor
+        model: Loaded BLIP model
+        processor: BLIP processor
         device: Device string (e.g., "cuda:0" or "cpu")
         lora_type: Type of LoRA being trained
         trigger_word: Optional trigger word to prepend
@@ -76,53 +66,29 @@ def caption_image(
     # Load image
     image = Image.open(image_path).convert("RGB")
     
-    # Get instruction for this LoRA type
-    instruction = get_instruction(lora_type)
+    # Get conditional prompt for this LoRA type
+    text_prompt = get_prompt(lora_type)
     
-    # Get model dtype
+    # Process inputs with conditional text
+    inputs = processor(image, text_prompt, return_tensors="pt").to(device)
+    
+    # Get model dtype and convert pixel values
     model_dtype = next(model.parameters()).dtype
-    
-    # Process inputs
-    inputs = processor(
-        text=instruction,
-        images=image,
-        return_tensors="pt"
-    )
-    
-    # Move to device with correct dtype
-    inputs = {k: v.to(device) for k, v in inputs.items()}
     if "pixel_values" in inputs:
         inputs["pixel_values"] = inputs["pixel_values"].to(model_dtype)
     
     # Generate caption
     with torch.no_grad():
-        generated_ids = model.generate(
-            input_ids=inputs["input_ids"],
-            pixel_values=inputs["pixel_values"],
-            max_new_tokens=1024,
-            do_sample=False,
+        output = model.generate(
+            **inputs,
+            max_new_tokens=100,
             num_beams=3,
+            early_stopping=True,
         )
     
-    # Decode output
-    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
-    
-    # Post-process using Florence-2's built-in parser
-    caption = processor.post_process_generation(
-        generated_text,
-        task=instruction,
-        image_size=(image.width, image.height)
-    )
-    
-    # Handle different output formats from Florence-2
-    if isinstance(caption, dict):
-        # Florence-2 returns {task: result} format
-        caption = caption.get(instruction, "")
-        # If still a dict or list, convert to string
-        if isinstance(caption, (dict, list)):
-            caption = str(caption)
-    
-    caption = str(caption).strip()
+    # Decode the output
+    caption = processor.decode(output[0], skip_special_tokens=True)
+    caption = caption.strip()
     
     # Prepend trigger word if specified
     if trigger_word:
@@ -145,8 +111,8 @@ def caption_batch(
     
     Args:
         image_paths: List of image file paths
-        model: Loaded Florence-2 model
-        processor: Loaded Florence-2 processor
+        model: Loaded Moondream2 model
+        processor: Not used (kept for API compatibility)
         device: Device string
         lora_type: Type of LoRA being trained
         trigger_word: Optional trigger word to prepend

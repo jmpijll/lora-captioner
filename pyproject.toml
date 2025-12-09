@@ -43,6 +43,8 @@ dependencies = [
     "click>=8.0.0",
     "tqdm>=4.65.0",
     "huggingface-hub>=0.20.0",
+    "einops>=0.8.0",
+    "timm>=1.0.0",
 ]
 
 [project.optional-dependencies]

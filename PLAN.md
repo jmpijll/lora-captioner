@@ -10,16 +10,16 @@ A command-line tool to caption images for LoRA training datasets using a lightwe
 
 ### Step 1.1: Repository Setup
 - [x] Initialize git repository
-- [ ] Create GitHub repository at github.com/jmpijll/lora-captioner
-- [ ] Set up .gitignore for Python
-- [ ] Create initial README.md
-- [ ] Add LICENSE (MIT recommended)
+- [x] Create GitHub repository at github.com/jmpijll/lora-captioner
+- [x] Set up .gitignore for Python
+- [x] Create initial README.md
+- [x] Add LICENSE (MIT)
 
 ### Step 1.2: Python Project Structure
-- [ ] Create pyproject.toml with dependencies
-- [ ] Set up src/lora_captioner package structure
-- [ ] Create requirements.txt for pip users
-- [ ] Add dev dependencies (pytest, black, ruff)
+- [x] Create pyproject.toml with dependencies
+- [x] Set up src/lora_captioner package structure
+- [x] Create requirements.txt for pip users
+- [x] Add dev dependencies (pytest, black, ruff)
 
 ### Step 1.3: Documentation Foundation
 - [x] Create docs/research folder with research findings
@@ -32,8 +32,8 @@ A command-line tool to caption images for LoRA training datasets using a lightwe
 ## Phase 2: Core Implementation
 
 ### Step 2.1: CLI Framework
-- [ ] Set up Click/Typer CLI framework
-- [ ] Implement basic argument parsing:
+- [x] Set up Click/Typer CLI framework
+- [x] Implement basic argument parsing:
   - `--input` / `-i`: Input folder path
   - `--dataset-name` / `-n`: Dataset name for renaming
   - `--lora-type` / `-t`: character | style | concept
@@ -41,17 +41,17 @@ A command-line tool to caption images for LoRA training datasets using a lightwe
   - `--trigger-word` / `-w`: Optional trigger word to prepend
 
 ### Step 2.2: Model Management
-- [ ] Implement model download/cache logic
-- [ ] Auto-download Florence-2-PromptGen on first run
-- [ ] Store model in `~/.cache/lora-captioner/` or user-specified path
-- [ ] Implement model existence check
+- [x] Implement model download/cache logic (skeleton)
+- [x] Auto-download Florence-2-PromptGen on first run (skeleton)
+- [x] Store model in `~/.cache/lora-captioner/` or user-specified path
+- [x] Implement model existence check
 - [ ] Add `--model-path` override option
 
 ### Step 2.3: Device Detection
-- [ ] Detect available hardware (CUDA, CPU)
-- [ ] Check VRAM availability if GPU present
-- [ ] Auto-select device based on model requirements
-- [ ] Implement `--device` override flag
+- [x] Detect available hardware (CUDA, CPU)
+- [x] Check VRAM availability if GPU present
+- [x] Auto-select device based on model requirements
+- [x] Implement `--device` override flag
 - [ ] Add `--force-cpu` convenience flag
 
 ---
@@ -59,32 +59,32 @@ A command-line tool to caption images for LoRA training datasets using a lightwe
 ## Phase 3: Image Processing Pipeline
 
 ### Step 3.1: Image Discovery
-- [ ] Scan input folder for supported formats (jpg, jpeg, png, webp, bmp)
-- [ ] Handle nested folders (optional `--recursive` flag)
-- [ ] Sort images for consistent ordering
+- [x] Scan input folder for supported formats (jpg, jpeg, png, webp, bmp)
+- [x] Handle nested folders (optional `--recursive` flag)
+- [x] Sort images for consistent ordering
 - [ ] Report image count before processing
 
 ### Step 3.2: Image Renaming
-- [ ] Implement rename logic: `{dataset_name}_{number:04d}.{ext}`
-- [ ] Preserve original file extensions
-- [ ] Handle naming conflicts
-- [ ] Create mapping log for traceability
-- [ ] Add `--no-rename` flag to skip renaming
+- [x] Implement rename logic: `{dataset_name}_{number:04d}.{ext}`
+- [x] Preserve original file extensions
+- [x] Handle naming conflicts
+- [x] Create mapping log for traceability
+- [x] Add `--no-rename` flag to skip renaming
 
 ### Step 3.3: Caption Generation
-- [ ] Load Florence-2-PromptGen model
-- [ ] Select instruction based on LoRA type:
+- [x] Load Florence-2-PromptGen model (skeleton)
+- [x] Select instruction based on LoRA type:
   - Character: `<MORE_DETAILED_CAPTION>`
   - Style: `<GENERATE_TAGS>` or `<DETAILED_CAPTION>`
   - Concept: `<DETAILED_CAPTION>`
-- [ ] Process images in batches (configurable batch size)
-- [ ] Add trigger word prefix if specified
+- [x] Process images in batches (configurable batch size)
+- [x] Add trigger word prefix if specified
 - [ ] Display progress bar
 
 ### Step 3.4: Caption File Writing
-- [ ] Write .txt file with same base name as image
-- [ ] UTF-8 encoding
-- [ ] Handle write errors gracefully
+- [x] Write .txt file with same base name as image
+- [x] UTF-8 encoding
+- [x] Handle write errors gracefully
 - [ ] Verify file creation
 
 ---

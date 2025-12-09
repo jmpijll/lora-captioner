@@ -1,7 +1,9 @@
 """
 Model download and management for LoRA Captioner.
 
-Handles downloading, caching, and loading the Florence-2-PromptGen model.
+Supports multiple vision-language models:
+- BLIP: Stable, works with all transformers versions
+- Florence-2: Better for LoRA training, requires transformers<=4.51.3
 """
 
 import os
@@ -9,11 +11,18 @@ from pathlib import Path
 from typing import Literal
 
 import torch
-from transformers import BlipProcessor, BlipForConditionalGeneration
 
-# Default model for captioning
-# Using BLIP for best compatibility and stability
-DEFAULT_MODEL_ID = "Salesforce/blip-image-captioning-large"
+# Model configurations
+MODELS = {
+    "blip": {
+        "model_id": "Salesforce/blip-image-captioning-large",
+        "description": "BLIP - Stable, broad compatibility",
+    },
+    "florence": {
+        "model_id": "microsoft/Florence-2-large",
+        "description": "Florence-2 Large - Microsoft's vision-language model",
+    },
+}
 
 # Cache directory for models
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "lora-captioner" / "models"
@@ -50,7 +59,7 @@ def detect_device(requested: DeviceType = "auto") -> tuple[str, torch.dtype]:
     return "cpu", torch.float32
 
 
-def get_model_path(model_id: str = DEFAULT_MODEL_ID, cache_dir: Path | None = None) -> Path:
+def get_model_path(model_id: str, cache_dir: Path | None = None) -> Path:
     """
     Get the local cache path for a model.
     
@@ -70,7 +79,7 @@ def get_model_path(model_id: str = DEFAULT_MODEL_ID, cache_dir: Path | None = No
     return cache_dir / model_id.replace("/", "--")
 
 
-def is_model_cached(model_id: str = DEFAULT_MODEL_ID, cache_dir: Path | None = None) -> bool:
+def is_model_cached(model_id: str, cache_dir: Path | None = None) -> bool:
     """
     Check if a model is already downloaded.
     
@@ -86,8 +95,8 @@ def is_model_cached(model_id: str = DEFAULT_MODEL_ID, cache_dir: Path | None = N
 
 
 def load_model(
-    model_id: str = DEFAULT_MODEL_ID,
     device: DeviceType = "auto",
+    model_type: str = "blip",
     cache_dir: Path | None = None,
 ):
     """
@@ -96,8 +105,8 @@ def load_model(
     Downloads the model if not already cached.
     
     Args:
-        model_id: HuggingFace model ID
         device: Device to load model on ("auto", "cuda", or "cpu")
+        model_type: Type of model ("blip" or "florence")
         cache_dir: Custom cache directory (optional)
         
     Returns:
@@ -105,10 +114,22 @@ def load_model(
     """
     device_str, dtype = detect_device(device)
     
+    model_config = MODELS.get(model_type.lower(), MODELS["blip"])
+    model_id = model_config["model_id"]
+    
     print(f"Loading model: {model_id}")
     print(f"Device: {device_str}, dtype: {dtype}")
     
-    # Load BLIP processor and model
+    if model_type.lower() == "florence":
+        return _load_florence(model_id, device_str, dtype, cache_dir)
+    else:
+        return _load_blip(model_id, device_str, dtype, cache_dir)
+
+
+def _load_blip(model_id: str, device_str: str, dtype: torch.dtype, cache_dir: Path | None):
+    """Load BLIP model."""
+    from transformers import BlipProcessor, BlipForConditionalGeneration
+    
     processor = BlipProcessor.from_pretrained(
         model_id,
         cache_dir=cache_dir,
@@ -121,5 +142,35 @@ def load_model(
     ).to(device_str)
     
     model.eval()
+    return model, processor, device_str
+
+
+def _load_florence(model_id: str, device_str: str, dtype: torch.dtype, cache_dir: Path | None):
+    """
+    Load Florence-2 model.
     
+    Note: Requires transformers<=4.51.3 for compatibility.
+    """
+    from transformers import AutoModelForCausalLM, AutoProcessor, AutoConfig
+    
+    # Load config first and set attention implementation to avoid SDPA issues
+    config = AutoConfig.from_pretrained(model_id, trust_remote_code=True)
+    config._attn_implementation = "eager"
+    
+    processor = AutoProcessor.from_pretrained(
+        model_id,
+        trust_remote_code=True,
+        cache_dir=cache_dir,
+    )
+    
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        config=config,
+        trust_remote_code=True,
+        torch_dtype=dtype,
+        cache_dir=cache_dir,
+        attn_implementation="eager",
+    ).to(device_str)
+    
+    model.eval()
     return model, processor, device_str

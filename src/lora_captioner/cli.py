@@ -75,6 +75,12 @@ from lora_captioner.model_manager import load_model
     default=False,
     help="Search for images in subdirectories"
 )
+@click.option(
+    "--model",
+    type=click.Choice(["blip", "florence"], case_sensitive=False),
+    default="blip",
+    help="Model to use: blip (stable) or florence (better, needs transformers<=4.51)"
+)
 @click.version_option(version=__version__, prog_name="lora-captioner")
 def main(
     input_path: Path,
@@ -86,6 +92,7 @@ def main(
     no_rename: bool,
     dry_run: bool,
     recursive: bool,
+    model: str,
 ):
     """
     Caption images for LoRA training datasets.
@@ -101,6 +108,7 @@ def main(
     click.echo(f"LoRA type:     {lora_type}")
     click.echo(f"Trigger word:  {trigger_word or '(none)'}")
     click.echo(f"Device:        {device}")
+    click.echo(f"Model:         {model}")
     click.echo(f"Rename files:  {'No' if no_rename else 'Yes'}")
     
     if dry_run:
@@ -151,18 +159,26 @@ def main(
     # Step 3: Load model
     if not dry_run:
         click.echo("\n[3/4] Loading captioning model...")
-        click.echo("   Model: Salesforce/blip-image-captioning-large")
+        if model == "florence":
+            click.echo("   Model: microsoft/Florence-2-large")
+            click.echo("   NOTE: Requires transformers<=4.51.3 for compatibility")
+        else:
+            click.echo("   Model: Salesforce/blip-image-captioning-large")
         click.echo("   (This may take a moment on first run as the model downloads)")
         
         try:
-            model, processor, device_str = load_model(device=device)
+            loaded_model, processor, device_str = load_model(device=device, model_type=model)
             click.echo(f"   Model loaded on {device_str}")
         except Exception as e:
             click.echo(f"ERROR: Failed to load model: {e}")
+            if model == "florence":
+                click.echo("   TIP: Florence-2 requires transformers<=4.51.3")
+                click.echo("   Run: pip install transformers==4.51.3")
+                click.echo("   Or use --model blip for compatibility")
             sys.exit(1)
     else:
         click.echo("\n[3/4] Would load captioning model (dry run)")
-        model, processor, device_str = None, None, "cpu"
+        loaded_model, processor, device_str = None, None, "cpu"
     
     # Step 4: Generate captions
     click.echo("\n[4/4] Generating captions...")
@@ -181,11 +197,12 @@ def main(
             try:
                 caption = caption_image(
                     image_path=image_path,
-                    model=model,
+                    model=loaded_model,
                     processor=processor,
                     device=device_str,
                     lora_type=lora_type_enum,
                     trigger_word=trigger_word,
+                    model_type=model,
                 )
             except Exception as e:
                 errors.append((image_path, str(e)))

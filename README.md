@@ -107,7 +107,31 @@ Options:
 
 ## Model Information
 
-This tool uses [Salesforce/blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large), a robust vision-language model for generating descriptive image captions. BLIP was chosen for its stability and broad compatibility.
+This tool supports two captioning models:
+
+### BLIP (Default)
+- **Model:** [Salesforce/blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large)
+- **Pros:** Stable, works with all Python/transformers versions
+- **Cons:** Generic captions, not specifically tuned for LoRA training
+
+```bash
+lora-captioner -i ./images -n "dataset" -t character --model blip
+```
+
+### Florence-2 (Recommended for LoRA)
+- **Model:** [microsoft/Florence-2-large](https://huggingface.co/microsoft/Florence-2-large)
+- **Pros:** Better captions specifically designed for diffusion model training
+- **Cons:** Requires `transformers<=4.51.3` (compatibility issue with newer versions)
+
+```bash
+# First, install compatible transformers version
+pip install -r requirements-florence.txt
+
+# Then use Florence-2
+lora-captioner -i ./images -n "dataset" -t character --model florence
+```
+
+**Tip:** Use a virtual environment to avoid conflicts when using Florence-2.
 
 ## Documentation
 

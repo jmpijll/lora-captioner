@@ -77,9 +77,9 @@ from lora_captioner.model_manager import load_model
 )
 @click.option(
     "--model",
-    type=click.Choice(["blip", "florence"], case_sensitive=False),
-    default="blip",
-    help="Model to use: blip (stable) or florence (better, needs transformers<=4.51)"
+    type=click.Choice(["florence", "blip"], case_sensitive=False),
+    default="florence",
+    help="Model to use: florence (default, better for LoRA) or blip (fallback)"
 )
 @click.version_option(version=__version__, prog_name="lora-captioner")
 def main(
@@ -161,9 +161,8 @@ def main(
         click.echo("\n[3/4] Loading captioning model...")
         if model == "florence":
             click.echo("   Model: microsoft/Florence-2-large")
-            click.echo("   NOTE: Requires transformers<=4.51.3 for compatibility")
         else:
-            click.echo("   Model: Salesforce/blip-image-captioning-large")
+            click.echo("   Model: Salesforce/blip-image-captioning-large (fallback)")
         click.echo("   (This may take a moment on first run as the model downloads)")
         
         try:
@@ -172,9 +171,8 @@ def main(
         except Exception as e:
             click.echo(f"ERROR: Failed to load model: {e}")
             if model == "florence":
-                click.echo("   TIP: Florence-2 requires transformers<=4.51.3")
-                click.echo("   Run: pip install transformers==4.51.3")
-                click.echo("   Or use --model blip for compatibility")
+                click.echo("   TIP: Try reinstalling with: pip install -e .")
+                click.echo("   Or use --model blip as fallback")
             sys.exit(1)
     else:
         click.echo("\n[3/4] Would load captioning model (dry run)")

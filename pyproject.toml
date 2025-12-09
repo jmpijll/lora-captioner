@@ -37,7 +37,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
 dependencies = [
-    "transformers>=4.36.0",
+    "transformers>=4.36.0,<=4.51.3",  # Pinned for Florence-2 compatibility
     "torch>=2.0.0",
     "Pillow>=10.0.0",
     "click>=8.0.0",

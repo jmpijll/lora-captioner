@@ -109,29 +109,25 @@ Options:
 
 This tool supports two captioning models:
 
-### BLIP (Default)
+### Florence-2 (Default)
+- **Model:** [microsoft/Florence-2-large](https://huggingface.co/microsoft/Florence-2-large)
+- **Pros:** Detailed captions optimized for LoRA/diffusion model training
+- **Best for:** Character, Style, and Concept LoRAs
+
+```bash
+lora-captioner -i ./images -n "dataset" -t character
+```
+
+### BLIP (Fallback)
 - **Model:** [Salesforce/blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large)
-- **Pros:** Stable, works with all Python/transformers versions
-- **Cons:** Generic captions, not specifically tuned for LoRA training
+- **Pros:** Stable, simpler captions
+- **Use when:** You need shorter captions or encounter issues with Florence-2
 
 ```bash
 lora-captioner -i ./images -n "dataset" -t character --model blip
 ```
 
-### Florence-2 (Recommended for LoRA)
-- **Model:** [microsoft/Florence-2-large](https://huggingface.co/microsoft/Florence-2-large)
-- **Pros:** Better captions specifically designed for diffusion model training
-- **Cons:** Requires `transformers<=4.51.3` (compatibility issue with newer versions)
-
-```bash
-# First, install compatible transformers version
-pip install -r requirements-florence.txt
-
-# Then use Florence-2
-lora-captioner -i ./images -n "dataset" -t character --model florence
-```
-
-**Tip:** Use a virtual environment to avoid conflicts when using Florence-2.
+**Note:** This package pins `transformers<=4.51.3` for Florence-2 compatibility.
 
 ## Documentation
 

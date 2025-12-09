@@ -86,6 +86,7 @@ dmypy.json
 # Test outputs
 test_output/
 test_images/
+jamie/
 *.log
 
 # OS generated files

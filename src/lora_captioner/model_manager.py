@@ -14,6 +14,10 @@ import torch
 
 # Model configurations
 MODELS = {
+    "qwen": {
+        "model_id": "Qwen/Qwen3-VL-2B-Instruct",
+        "description": "Qwen3-VL-2B-Instruct - Ultra-detailed captions for LoRA training",
+    },
     "blip": {
         "model_id": "Salesforce/blip-image-captioning-large",
         "description": "BLIP - Stable, broad compatibility",
@@ -96,7 +100,7 @@ def is_model_cached(model_id: str, cache_dir: Path | None = None) -> bool:
 
 def load_model(
     device: DeviceType = "auto",
-    model_type: str = "blip",
+    model_type: str = "qwen",
     cache_dir: Path | None = None,
 ):
     """
@@ -106,7 +110,7 @@ def load_model(
     
     Args:
         device: Device to load model on ("auto", "cuda", or "cpu")
-        model_type: Type of model ("blip" or "florence")
+        model_type: Type of model ("qwen", "blip" or "florence")
         cache_dir: Custom cache directory (optional)
         
     Returns:
@@ -114,13 +118,15 @@ def load_model(
     """
     device_str, dtype = detect_device(device)
     
-    model_config = MODELS.get(model_type.lower(), MODELS["blip"])
+    model_config = MODELS.get(model_type.lower(), MODELS["qwen"])
     model_id = model_config["model_id"]
     
     print(f"Loading model: {model_id}")
     print(f"Device: {device_str}, dtype: {dtype}")
     
-    if model_type.lower() == "florence":
+    if model_type.lower() == "qwen":
+        return _load_qwen(model_id, device_str, dtype, cache_dir)
+    elif model_type.lower() == "florence":
         return _load_florence(model_id, device_str, dtype, cache_dir)
     else:
         return _load_blip(model_id, device_str, dtype, cache_dir)
@@ -171,6 +177,33 @@ def _load_florence(model_id: str, device_str: str, dtype: torch.dtype, cache_dir
         cache_dir=cache_dir,
         attn_implementation="eager",
     ).to(device_str)
+    
+    model.eval()
+    return model, processor, device_str
+
+
+def _load_qwen(model_id: str, device_str: str, dtype: torch.dtype, cache_dir: Path | None):
+    """
+    Load Qwen3-VL model.
+    
+    Uses AutoModelForImageTextToText for vision-language capabilities.
+    """
+    from transformers import AutoModelForImageTextToText, AutoProcessor
+    
+    processor = AutoProcessor.from_pretrained(
+        model_id,
+        cache_dir=cache_dir,
+    )
+    
+    model = AutoModelForImageTextToText.from_pretrained(
+        model_id,
+        torch_dtype=dtype,
+        cache_dir=cache_dir,
+        device_map=device_str if device_str != "cpu" else None,
+    )
+    
+    if device_str == "cpu":
+        model = model.to(device_str)
     
     model.eval()
     return model, processor, device_str

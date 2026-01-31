@@ -86,8 +86,24 @@ dmypy.json
 # Test outputs
 test_output/
 test_images/
-jamie/
 *.log
+
+# Dataset folders (test/personal data - do not commit)
+jamie/
+ch4nt4l/
+4l3x/
+wypk3/
+rutg3r/
+
+# Image files (to prevent accidental commits of training data)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.webp
+*.HEIC
+*.heic
 
 # OS generated files
 .DS_Store

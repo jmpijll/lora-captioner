@@ -4,9 +4,9 @@ A command-line tool to automatically caption images for LoRA training datasets u
 
 ## Features
 
-- **Automatic Image Captioning**: Uses BLIP (Salesforce/blip-image-captioning-large), a robust model for generating descriptive captions
+- **Ultra-Detailed Captions**: Uses Qwen3-VL-2B-Instruct for rich, comprehensive image descriptions optimized for LoRA training
 - **Multiple LoRA Types**: Optimized captioning strategies for Character, Style, and Concept LoRAs
-- **Low Resource Usage**: Runs on as little as 2GB VRAM (GPU) or 4GB RAM (CPU)
+- **Multiple Model Options**: Choose between Qwen3-VL (default), Florence-2, or BLIP models
 - **Automatic Model Download**: Downloads the VLLM model on first run
 - **Smart Device Detection**: Automatically selects GPU or CPU based on available hardware
 - **Batch Renaming**: Renames images to consistent dataset format
@@ -75,6 +75,7 @@ Options:
   -w, --trigger-word TEXT   Trigger word to prepend to captions
   -o, --output PATH         Output folder (default: same as input)
   --device TEXT             Device to use: auto, cuda, or cpu (default: auto)
+  --model TEXT              Model to use: qwen (default), florence, or blip
   --no-rename               Skip renaming images
   --recursive               Search for images in subdirectories
   --dry-run                 Preview actions without making changes
@@ -107,27 +108,35 @@ Options:
 
 ## Model Information
 
-This tool supports two captioning models:
+This tool supports three captioning models:
 
-### Florence-2 (Default)
-- **Model:** [microsoft/Florence-2-large](https://huggingface.co/microsoft/Florence-2-large)
-- **Pros:** Detailed captions optimized for LoRA/diffusion model training
-- **Best for:** Character, Style, and Concept LoRAs
+### Qwen3-VL (Default)
+- **Model:** [Qwen/Qwen3-VL-2B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct)
+- **Pros:** Ultra-detailed captions with comprehensive descriptions including textures, lighting, composition, and camera perspective
+- **Best for:** High-quality LoRA training datasets requiring rich detail
+- **Requirements:** ~4GB VRAM (GPU) or 8GB RAM (CPU)
 
 ```bash
 lora-captioner -i ./images -n "dataset" -t character
 ```
 
+### Florence-2
+- **Model:** [microsoft/Florence-2-large](https://huggingface.co/microsoft/Florence-2-large)
+- **Pros:** Detailed captions, good balance of speed and quality
+- **Best for:** General-purpose captioning
+
+```bash
+lora-captioner -i ./images -n "dataset" -t character --model florence
+```
+
 ### BLIP (Fallback)
 - **Model:** [Salesforce/blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large)
-- **Pros:** Stable, simpler captions
-- **Use when:** You need shorter captions or encounter issues with Florence-2
+- **Pros:** Stable, lightweight, simpler captions
+- **Use when:** You need shorter captions or have limited resources
 
 ```bash
 lora-captioner -i ./images -n "dataset" -t character --model blip
 ```
-
-**Note:** This package pins `transformers<=4.51.3` for Florence-2 compatibility.
 
 ## Documentation
 

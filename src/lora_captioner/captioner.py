@@ -34,6 +34,11 @@ FLORENCE_INSTRUCTIONS = {
     LoRAType.CONCEPT: "<DETAILED_CAPTION>",
 }
 
+# Qwen3-VL system prompt for ultra-detailed captions
+QWEN_SYSTEM_PROMPT = """Write ONE ultra-detailed paragraph (10–16 sentences, ~180–320 words). Stay grounded in visible details. Include: subject micro-details (materials, textures, patterns, wear, reflections); people details if present (hair, skin tones, makeup, jewelry, fabric types, fit); environment depth (foreground/midground/background, signage/props, surface materials); lighting analysis (key/fill/back light, direction, softness, highlights, shadow shape); camera perspective (angle, lens feel, depth of field) and composition (leading lines, negative space, symmetry/asymmetry, visual hierarchy). No preface, no reasoning, no <think>."""
+
+QWEN_USER_PROMPT = "Describe this image in detail."
+
 
 def get_blip_prompt(lora_type: LoRAType) -> str:
     """Get BLIP conditional prompt for a LoRA type."""
@@ -52,19 +57,19 @@ def caption_image(
     device: str,
     lora_type: LoRAType,
     trigger_word: str | None = None,
-    model_type: str = "blip",
+    model_type: str = "qwen",
 ) -> str:
     """
     Generate a caption for a single image.
     
     Args:
         image_path: Path to the image file
-        model: Loaded model (BLIP or Florence-2)
+        model: Loaded model (Qwen3-VL, BLIP or Florence-2)
         processor: Model processor
         device: Device string (e.g., "cuda:0" or "cpu")
         lora_type: Type of LoRA being trained
         trigger_word: Optional trigger word to prepend
-        model_type: Type of model ("blip" or "florence")
+        model_type: Type of model ("qwen", "blip" or "florence")
         
     Returns:
         Generated caption string
@@ -72,7 +77,9 @@ def caption_image(
     # Load image
     image = Image.open(image_path).convert("RGB")
     
-    if model_type.lower() == "florence":
+    if model_type.lower() == "qwen":
+        caption = _caption_with_qwen(image, model, processor, device, lora_type)
+    elif model_type.lower() == "florence":
         caption = _caption_with_florence(image, model, processor, device, lora_type)
     else:
         caption = _caption_with_blip(image, model, processor, device, lora_type)
@@ -150,6 +157,58 @@ def _caption_with_florence(image: Image.Image, model, processor, device: str, lo
             caption = str(caption)
     
     return str(caption).strip()
+
+
+def _caption_with_qwen(image: Image.Image, model, processor, device: str, lora_type: LoRAType) -> str:
+    """Generate caption using Qwen3-VL model with ultra-detailed system prompt."""
+    # Build messages with system prompt and image
+    messages = [
+        {
+            "role": "system",
+            "content": [{"type": "text", "text": QWEN_SYSTEM_PROMPT}],
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "image": image},
+                {"type": "text", "text": QWEN_USER_PROMPT},
+            ],
+        },
+    ]
+    
+    # Apply chat template and process
+    inputs = processor.apply_chat_template(
+        messages,
+        tokenize=True,
+        add_generation_prompt=True,
+        return_dict=True,
+        return_tensors="pt",
+    )
+    
+    # Move to device
+    inputs = inputs.to(model.device)
+    
+    # Generate caption
+    with torch.no_grad():
+        generated_ids = model.generate(
+            **inputs,
+            max_new_tokens=512,
+            do_sample=False,
+        )
+    
+    # Trim input tokens from output
+    generated_ids_trimmed = [
+        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+    ]
+    
+    # Decode output
+    output_text = processor.batch_decode(
+        generated_ids_trimmed,
+        skip_special_tokens=True,
+        clean_up_tokenization_spaces=False,
+    )
+    
+    return output_text[0].strip()
 
 
 def caption_batch(

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-02-01
+
+### Added
+- **Qwen3-VL-2B-Instruct** as the new default captioning model
+- Ultra-detailed caption generation with comprehensive descriptions including:
+  - Subject micro-details (materials, textures, patterns, wear, reflections)
+  - People details (hair, skin tones, makeup, jewelry, fabric types, fit)
+  - Environment depth (foreground/midground/background, signage, props)
+  - Lighting analysis (key/fill/back light, direction, softness, shadows)
+  - Camera perspective and composition (angle, lens feel, depth of field)
+- Model selection via `--model` flag: `qwen` (default), `florence`, or `blip`
+
+### Changed
+- Default model changed from Florence-2 to Qwen3-VL-2B-Instruct
+- Updated `transformers` requirement to `>=4.45.0` for Qwen3-VL support
+- Added `qwen-vl-utils` and `accelerate` dependencies
+
+### Fixed
+- Improved error messages with model-specific troubleshooting tips
+
 ## [0.1.0] - 2024-12-10
 
 ### Added
@@ -31,5 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development plan (PLAN.md)
 - Agent guidelines (AGENTS.md)
 
-[Unreleased]: https://github.com/jmpijll/lora-captioner/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jmpijll/lora-captioner/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/jmpijll/lora-captioner/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jmpijll/lora-captioner/releases/tag/v0.1.0

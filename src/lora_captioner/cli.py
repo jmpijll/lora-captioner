@@ -77,9 +77,9 @@ from lora_captioner.model_manager import load_model
 )
 @click.option(
     "--model",
-    type=click.Choice(["florence", "blip"], case_sensitive=False),
-    default="florence",
-    help="Model to use: florence (default, better for LoRA) or blip (fallback)"
+    type=click.Choice(["qwen", "florence", "blip"], case_sensitive=False),
+    default="qwen",
+    help="Model to use: qwen (default, ultra-detailed), florence, or blip (fallback)"
 )
 @click.version_option(version=__version__, prog_name="lora-captioner")
 def main(
@@ -159,7 +159,9 @@ def main(
     # Step 3: Load model
     if not dry_run:
         click.echo("\n[3/4] Loading captioning model...")
-        if model == "florence":
+        if model == "qwen":
+            click.echo("   Model: Qwen/Qwen3-VL-2B-Instruct")
+        elif model == "florence":
             click.echo("   Model: microsoft/Florence-2-large")
         else:
             click.echo("   Model: Salesforce/blip-image-captioning-large (fallback)")
@@ -170,7 +172,10 @@ def main(
             click.echo(f"   Model loaded on {device_str}")
         except Exception as e:
             click.echo(f"ERROR: Failed to load model: {e}")
-            if model == "florence":
+            if model == "qwen":
+                click.echo("   TIP: Try reinstalling with: pip install -e .")
+                click.echo("   Or use --model florence or --model blip as fallback")
+            elif model == "florence":
                 click.echo("   TIP: Try reinstalling with: pip install -e .")
                 click.echo("   Or use --model blip as fallback")
             sys.exit(1)
